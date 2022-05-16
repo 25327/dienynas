@@ -42,13 +42,18 @@
         <th>ID</th>
         <th>class_id</th>
         <th>lesson_id</th>
+        <th>Redaguoti</th>
     </tr>
     <? foreach ($teachers as $teacher) { ?>
         <tr>
             <td><?= $teacher['id'] ?></td>
             <td><?= $teacher['class_id'] ?></td>
             <td><?= $teacher['lesson_id'] ?></td>
+            <td>
+                <a href="<?= base_url('/director/editTeacher/' . $teacher($id)) ?>">Redaguoti</a>
+            </td>
         </tr>
+
     <? } ?>
 </table>
 
