@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use CodeIgniter\Model;
+use App\Models\UserModel;
 
 class TeacherModel extends Model
 {
@@ -43,4 +44,30 @@ class TeacherModel extends Model
     protected $afterFind = [];
     protected $beforeDelete = [];
     protected $afterDelete = [];
+
+    /**
+     * @param int $id
+     * @return false
+     */
+    public function getFullData(int $id)
+    {
+        $teacher = $this->find($id);
+        if ($teacher) {
+            $user = (new UserModel())->find($teacher['user_id']);
+            if ($user) {
+                return array_merge($user, $teacher);
+            }
+        }
+        return false;
+    }
+
+    public function findAllWithRelations()
+    {
+        return $this
+            ->select('teachers.id, users.email, users.firstname, users.lastname, lessons.title as lesson, classes.title as class')
+            ->join('users', 'users.id = teachers.id')
+            ->join('lessons', 'lessons.id = teachers.lesson_id', 'left')
+            ->join('classes', 'classes.id = teachers.class_id', 'left')
+            ->findAll();
+    }
 }

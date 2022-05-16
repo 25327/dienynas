@@ -22,7 +22,7 @@ class Director extends BaseController
         $data = [
             'lessons' => (new LessonModel)->findAll(),
             'classes' => (new ClassModel)->findAll(),
-            'teachers' => (new TeacherModel)->findAll(),
+            'teachers' => (new TeacherModel)->findAllWithRelations(),
             'errors' => $this->session->getFlashdata('errors') ?? null,
             'success' => $this->session->getFlashdata('success') ?? null,
         ];
@@ -62,5 +62,56 @@ class Director extends BaseController
         } else {
             return redirect()->to(base_url('/director/index'))->with('errors', $this->validator->listErrors());
         }
+    }
+
+    public function editTeacher(int $id)
+    {
+        $teacher = (new TeacherModel())->getFullData($id);
+        if ($teacher) {
+            $data = [
+                'lessons' => (new LessonModel)->findAll(),
+                'classes' => (new ClassModel())->findAll(),
+                'teacher' => $teacher,
+            ];
+
+            return view('users/director/teacher_edit', $data);
+        }
+        return redirect()->to(base_url('/director/index'))->with('errors', 'Mokytojas nerastas');
+    }
+
+    public function updateTeacher(int $id)
+    {
+        $teacher = (new TeacherModel())->getFullData($id);
+        if ($teacher) {
+            if ($this->validate([
+                'password' => 'permit_empty|min_length[2]',
+                'email' => 'required|valid_email|is_unique[users.email,id,' . $teacher['user_id'] . ']',
+                'firstname' => 'required|min_length[2]|max_length[60]',
+                'lastname' => 'required|min_length[2]|max_length[60]',
+                'lesson_id' => 'permit_empty|is_not_unique[lessons.id]',
+                'class_id' => 'permit_empty|is_not_unique[classes.id]',
+            ])) {
+                $userData = [
+                    'email' => $this->request->getVar('email'),
+                    'firstname' => $this->request->getVar('firstname'),
+                    'lastname' => $this->request->getVar('lastname'),
+                ];
+
+                $password = $this->request->getVar('password') ?? null;
+                if ($password != null) {
+                    $userData['password'] = md5($this->request->getVar('password'));
+                }
+
+                (new UserModel())->update($teacher['user_id'], $userData);
+
+                (new TeacherModel())->update($id, [
+                    'lesson_id' => $this->request->getVar('lesson_id') ?? null,
+                    'class_id' => $this->request->getVar('class_id') ?? null,
+                ]);
+
+                return redirect()->to(base_url('/director/index'))->with('success', 'Mokytojas sėkimingai atnaujintas');
+            }
+        }
+        return redirect()->to(base_url('/director/index'))->with('errors', 'mokytojas nerastas');
     }
 }
