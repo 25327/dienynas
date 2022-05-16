@@ -2,7 +2,7 @@
 
 namespace App\Controllers;
 
-use App\Models\User;
+use App\Models\UserModel;
 
 class Home extends BaseController
 {
@@ -13,19 +13,18 @@ class Home extends BaseController
 
     public function login()
     {
-        if (!$this->validate([
+        if ($this->validate([
             'email' => 'required|valid_email',
             'password' => 'required|min_length[2]',
         ])) {
-
             $email = $this->request->getVar('email');
             $password = $this->request->getVar('password');
-            $user = (new User())->where('email', $email)->where('password', md5($password))->first();
-
+            $user = (new UserModel())->where('email', $email)->where('password', md5($password))->first();
             if (!$user) {
                 $this->validator->setError('email', 'Bad password');
             } else {
-                $this->session->set('user_id', $user['id']);
+                unset($user['password']);
+                $this->session->set('user', $user);
                 switch ($user['type']) {
                     case 'director':
                         $route = '/director/index';
@@ -37,11 +36,9 @@ class Home extends BaseController
                         $route = '/student/index';
                         break;
                 }
-
                 return redirect()->to(base_url($route));
             }
         }
-
         return view('login', ['errors' => $this->validator->listErrors()]);
     }
 }
