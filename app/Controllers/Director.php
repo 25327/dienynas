@@ -51,13 +51,18 @@ class Director extends BaseController
         return view('users/director/classes', $data);
     }
 
-    public function lessons()
+    public function lessons(int $id = null)
     {
         $data = [
             'errors' => $this->session->getFlashdata('errors') ?? null,
             'success' => $this->session->getFlashdata('success') ?? null,
             'lessons' => (new LessonModel)->findAll()
         ];
+
+        if ($id != null) {
+            $data['lesson'] = (new LessonModel)->find($id);
+        }
+
         return view('users/director/lessons', $data);
     }
 
@@ -87,7 +92,7 @@ class Director extends BaseController
         ])) {
             $user_data = [
                 'email' => $this->request->getVar('email'),
-                'password' => $this->request->getVar('password'),
+                'password' => md5($this->request->getVar('password')),
                 'firstname' => $this->request->getVar('firstname'),
                 'lastname' => $this->request->getVar('lastname'),
                 'type' => 'teacher',
@@ -171,7 +176,7 @@ class Director extends BaseController
         ])) {
             $user_data = [
                 'email' => $this->request->getVar('email'),
-                'password' => $this->request->getVar('password'),
+                'password' => md5($this->request->getVar('password')),
                 'firstname' => $this->request->getVar('firstname'),
                 'lastname' => $this->request->getVar('lastname'),
                 'type' => 'student',
@@ -250,5 +255,43 @@ class Director extends BaseController
         } else {
             return redirect()->to(base_url('/director/lessons'))->with('errors', $this->validator->listErrors());
         }
+    }
+
+    public function updateLesson(int $id)
+    {
+        $lesson = (new LessonModel())->find($id);
+        if ($lesson) {
+            if ($this->validate([
+                'title' => 'required|min_length[2]|max_length[30]|is_unique[lessons.title,id,' . $id . ']',
+            ])) {
+                (new LessonModel())->update($id, [
+                    'title' => $this->request->getVar('title'),
+                ]);
+                return redirect()->to(base_url('/director/lessons'))->with('success', 'Pamoka sėkmingai atnaujinta');
+            } else {
+                $errors = $this->validator->listErrors();
+            }
+        } else {
+            $errors = 'Klaida';
+        }
+
+        return redirect()->to(base_url('/director/lessons'))->with('errors', $errors);
+    }
+
+    public function deleteLesson(int $id)
+    {
+        $lesson = (new LessonModel())->find($id);
+        if ($lesson) {
+            (new LessonModel())->delete($id);
+            (new TeacherModel())
+                ->set('lesson_id', 0, false)
+                ->where('lesson_id', $id)
+                ->update();
+
+            return redirect()->to(base_url('/director/lessons'))->with('success', 'Pamoka pasalinta');
+        } else {
+            $errors = 'Klaida';
+        }
+        return redirect()->to(base_url('/director/lessons'))->with('errors', 'Pamoka nerasta');
     }
 }

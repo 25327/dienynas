@@ -8,6 +8,8 @@ class Lessons extends Seeder
 {
     public function run()
     {
+        $this->db->table('lessons')->truncate();
+
         $lessons = [
             [
                 'title' => 'Lietuviu kalba',
@@ -29,7 +31,6 @@ class Lessons extends Seeder
             ],
         ];
 
-        $this->db->table('lessons')->truncate();
         $this->db->table('lessons')->insertBatch($lessons);
     }
 }

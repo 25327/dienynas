@@ -8,6 +8,10 @@ class Users extends Seeder
 {
     public function run()
     {
+        $this->db->table('users')->truncate();
+        $this->db->table('students')->truncate();
+        $this->db->table('teachers')->truncate();
+
         $users = [
             [
                 'email' => 'direktorius@direktorius.lt',
@@ -32,9 +36,6 @@ class Users extends Seeder
             ],
         ];
 
-        $this->db->table('users')->truncate();
-        $this->db->table('students')->truncate();
-        $this->db->table('teachers')->truncate();
         $this->db->table('users')->insertBatch($users);
     }
 }

@@ -8,6 +8,8 @@ class Classes extends Seeder
 {
     public function run()
     {
+        $this->db->table('classes')->truncate();
+
         $classes = [
             [
                 'title' => '7A',
@@ -27,7 +29,6 @@ class Classes extends Seeder
             ],
         ];
 
-        $this->db->table('classes')->truncate();
         $this->db->table('classes')->insertBatch($classes);
     }
 }
