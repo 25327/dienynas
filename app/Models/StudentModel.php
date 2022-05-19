@@ -15,11 +15,8 @@ class StudentModel extends Model
     protected $useSoftDeletes = false;
     protected $protectFields = true;
     protected $allowedFields = [
-        'email',
-        'password',
-        'firstname',
-        'lastname',
-        'type',
+        'user_id',
+        'class_id',
     ];
 
     // Dates
@@ -45,4 +42,22 @@ class StudentModel extends Model
     protected $afterFind = [];
     protected $beforeDelete = [];
     protected $afterDelete = [];
+
+    /**
+     * @param int|null $id
+     * @return mixed
+     */
+    public function getWithRelations(int $id = null)
+    {
+        $data = $this
+            ->select('students.id, users.email, users.firstname, users.lastname, classes.title as class, students.class_id, students.user_id')
+            ->join('users', 'users.id = students.user_id')
+            ->join('classes', 'classes.id = students.class_id', 'left');
+
+        if ($id != null) {
+            return $data->find($id);
+        } else {
+            return $data->findAll();
+        }
+    }
 }

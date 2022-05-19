@@ -3,6 +3,8 @@
 namespace App\Controllers;
 
 use App\Controllers\BaseController;
+use App\Models\TeacherModel;
+use App\Models\ClassModel;
 
 class Teacher extends BaseController
 {
@@ -15,6 +17,15 @@ class Teacher extends BaseController
 
     public function index()
     {
-        return view('users/teacher');
+        $teacher = (new TeacherModel())->where('user_id', session()->user['id'])->first();
+        $data = [
+            'students' => (new ClassModel())->getStudents($teacher['class_id']),
+        ];
+
+        if ($teacher['class_id'] != null) {
+            $data['class'] = (new ClassModel())->find($teacher['class_id']);
+        }
+
+        return view('users/teacher', $data);
     }
 }
