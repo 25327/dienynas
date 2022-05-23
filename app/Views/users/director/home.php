@@ -1,4 +1,4 @@
-<h1>Direktoriaus aplinka</h1>
+<h1>Direktoriaus aplinka (<a href="<?= base_url('/home/logout') ?>">Atsijungti</a>)</h1>
 
 <hr>
 

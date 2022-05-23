@@ -41,4 +41,11 @@ class Home extends BaseController
         }
         return view('login', ['errors' => $this->validator->listErrors()]);
     }
+
+    public function logout()
+    {
+        $this->session->remove('user');
+
+        return redirect()->to(base_url('/'));
+    }
 }

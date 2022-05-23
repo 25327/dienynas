@@ -43,11 +43,18 @@ class Director extends BaseController
         return view('users/director/teachers', $data);
     }
 
-    public function classes()
+    public function classes(int $id = null)
     {
         $data = [
+            'errors' => $this->session->getFlashdata('errors') ?? null,
+            'success' => $this->session->getFlashdata('success') ?? null,
             'classes' => (new ClassModel)->findAll(),
         ];
+
+        if ($id != null) {
+            $data['class'] = (new ClassModel())->find($id);
+        }
+
         return view('users/director/classes', $data);
     }
 
@@ -293,5 +300,48 @@ class Director extends BaseController
             $errors = 'Klaida';
         }
         return redirect()->to(base_url('/director/lessons'))->with('errors', 'Pamoka nerasta');
+    }
+
+    public function createClass()
+    {
+        if ($this->validate([
+            'title' => 'required|exact_length[2,3]|is_unique[classes.title]',
+            'max_week_lessons' => 'required|integer|exact_length[1,2]',
+        ])) {
+            (new ClassModel())->insert([
+                'title' => $this->request->getVar('title'),
+                'max_week_lessons' => (int)$this->request->getVar('max_week_lessons'),
+            ]);
+
+            return redirect()->to(base_url('/director/classes'))->with('success', 'Klase sėkmingai sukurta');
+        } else {
+            return redirect()->to(base_url('/director/classes'))->with('errors', $this->validator->listErrors());
+        }
+    }
+
+    public function updateClass(int $id)
+    {
+        $class = (new ClassModel())->find($id);
+        if ($class) {
+            if ($this->validate([
+                'title' => 'required|is_unique[classes.title,id,' . $id . ']',
+            ])) {
+                (new ClassModel())->update($id, [
+                    'title' => $this->request->getVar('title'),
+                ]);
+                return redirect()->to(base_url('/director/classes'))->with('success', 'Klase sėkmingai atnaujinta');
+            } else {
+                $errors = $this->validator->listErrors();
+            }
+        } else {
+            $errors = 'Klaida';
+        }
+
+        return redirect()->to(base_url('/director/classes'))->with('errors', $errors);
+    }
+
+    public function deleteClass(int $id)
+    {
+
     }
 }

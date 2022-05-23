@@ -15,7 +15,10 @@ class ClassModel extends Model
     protected $returnType = 'array';
     protected $useSoftDeletes = false;
     protected $protectFields = true;
-    protected $allowedFields = [];
+    protected $allowedFields = [
+        'title',
+        'max_week_lessons',
+    ];
 
     // Dates
     protected $useTimestamps = false;
