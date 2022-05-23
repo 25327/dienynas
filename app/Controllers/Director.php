@@ -342,6 +342,18 @@ class Director extends BaseController
 
     public function deleteClass(int $id)
     {
+        $class = (new ClassModel())->find($id);
+        if ($class) {
+            (new ClassModel())->delete($id);
+            (new TeacherModel())
+                ->set('class_id', 0, false)
+                ->where('class_id', $id)
+                ->update();
 
+            return redirect()->to(base_url('/director/classes'))->with('success', 'Klase pasalinta');
+        } else {
+            $errors = 'Klaida';
+        }
+        return redirect()->to(base_url('/director/classes'))->with('errors', 'Klase nerasta');
     }
 }

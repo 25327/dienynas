@@ -54,6 +54,7 @@
             <td><?= $class['max_week_lessons'] ?> </td>
             <td>
                 <a href="<?= base_url('/director/classes/' . $class['id']) ?>">Redaguoti</a>
+                <a href="<?= base_url('/director/deleteClass/' . $class['id']) ?>">Istrinti</a>
             </td>
         </tr>
     <? } ?>
