@@ -20,6 +20,7 @@ class Home extends BaseController
             $email = $this->request->getVar('email');
             $password = $this->request->getVar('password');
             $user = (new UserModel())->where('email', $email)->where('password', md5($password))->first();
+
             if (!$user) {
                 $this->validator->setError('email', 'Bad password');
             } else {
