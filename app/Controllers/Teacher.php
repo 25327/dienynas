@@ -3,6 +3,8 @@
 namespace App\Controllers;
 
 use App\Controllers\BaseController;
+use App\Models\LessonModel;
+use App\Models\StudentModel;
 use App\Models\TeacherModel;
 use App\Models\ClassModel;
 use App\Models\ScheduleModel;
@@ -79,5 +81,30 @@ class Teacher extends BaseController
         }
 
         return redirect()->to(base_url('/teacher/index'))->with('errors', $errors);
+    }
+
+    public function deleteLesson(int $schedule_id)
+    {
+        $schedule = (new ScheduleModel())->find($schedule_id);
+        if ($schedule) {
+            (new ScheduleModel())->delete($schedule_id);
+
+            return redirect()->to(base_url('/teacher/index'))->with('success', 'Pamoka pasalinta');
+        } else {
+            $errors = 'Klaida';
+        }
+        return redirect()->to(base_url('/teacher/index'))->with('errors', $errors);
+    }
+
+    public function getLessonsByDay()
+    {
+
+    }
+
+    public function logout()
+    {
+        $this->session->remove('user');
+
+        return redirect()->to(base_url('/'));
     }
 }

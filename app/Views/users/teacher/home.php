@@ -1,4 +1,4 @@
-<h1>Mokytojo aplinka</h1>
+<h1>Mokytojo aplinka (<a href="<?= base_url('/home/logout') ?>">Atsijungti</a>)</h1>
 
 <hr>
 
@@ -82,9 +82,12 @@
         <input type="submit" value="Pridėti">
     </fieldset>
 </form>
+
 Tvarkaraščio užpildymas: <?= $count_lessons ?> / <?= $class['max_week_lessons'] ?>
+
 <br/>
 <br/>
+
 <table border="1">
     <tr>
         <? foreach ($days as $day) { ?>
@@ -101,10 +104,40 @@ Tvarkaraščio užpildymas: <?= $count_lessons ?> / <?= $class['max_week_lessons
                         <tr>
                             <td>(<?= $item['lesson_number'] ?>)</td>
                             <td><?= $item['title'] ?></td>
+                            <td>
+                                <a href="<?= base_url('/teacher/deleteLesson/' . $item['id']) ?>">X</a>
+                            </td>
                         </tr>
                     <? } ?>
                 </table>
             </td>
         <? } ?>
+    </tr>
+</table>
+
+<hr>
+
+Tvarkarastis pagal diena:
+
+<br/>
+<br/>
+
+Iveskite data: <input type="date">
+
+<br/>
+<br/>
+
+<table border="1">
+    <tr>
+        <th>diena</th>
+    </tr>
+    <tr>
+        <td>
+            <table>
+                <tr>
+                    <td>rodymas</td>
+                </tr>
+            </table>
+        </td>
     </tr>
 </table>
