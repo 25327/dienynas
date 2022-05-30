@@ -2,7 +2,40 @@
 
 <hr>
 
+<? if (isset($errors)) { ?>
+    <?= $errors ?>
+<? } ?>
+<? if (isset($success)) { ?>
+    <?= $success ?>
+<? } ?>
+
+<hr>
+
+<form action="<?= base_url('/teacher/date') ?>" method="post">
+    <input type="text" name="date" value="<?= $date ?? date('Y-m-d') ?>">
+    <input type="submit" value="Rodyti">
+</form>
+
+<hr>
+
+<? foreach ($teacher_schedule as $item) { ?>
+    <tr>
+        <td><?= $item['lesson_number'] ?></td>
+        <td>
+
+            <a href="<?= base_url('/teacher/lesson/' . $item['id'] . '/' . ($date ?? date('Y-m-d'))) ?>">
+                <?= $item['title'] ?>
+            </a>
+        </td>
+        <td><?= $item['class'] ?></td>
+    </tr>
+    <br>
+<? } ?>
+
+<hr>
+
 <? if (isset($class)) { ?>
+    <hr>
     Mano klasė: <?= $class['title'] ?><br/>
     Max pamokų skaičius per savaitę: <?= $class['max_week_lessons'] ?>
     <hr>
@@ -22,122 +55,89 @@
             </tr>
         <? } ?>
     </table>
-<? } ?>
-<h2>Klasės pamokų tvarkaraštis</h2>
-<hr>
-<? if (isset($errors)) { ?>
-    <?= $errors ?>
-<? } ?>
-<? if (isset($success)) { ?>
-    <?= $success ?>
-<? } ?>
-<hr>
-<form action="<?= base_url('/teacher/addLesson') ?>" method="post">
-    <fieldset>
-        <legend>Pridėti pamoką į tvarkaraštį:</legend>
-        <table>
-            <tr>
-                <td>Savaitės diena</td>
-                <td>
-                    <select name="week_day">
-                        <option>-</option>
-                        <? foreach ($days as $day) { ?>
-                            <option value="<?= $day ?>"><?= ucfirst($day) ?></option>
-                        <? } ?>
-                    </select>
-                </td>
-            </tr>
-            <tr>
-                <td>Pamokos eilė</td>
-                <td>
-                    <select name="lesson_number">
-                        <option>-</option>
-                        <? for ($i = 1; $i <= round($class['max_week_lessons'] / 5); $i++) { ?>
-                            <option value="<?= $i ?>"><?= $i ?></option>
-                        <? } ?>
-                    </select>
-                </td>
-            </tr>
-            <tr>
-                <td>Pamoka</td>
-                <td>
-                    <select name="teacher_id">
-                        <option>-</option>
-                        <? foreach ($teachers as $teacher) { ?>
-                            <option value="<?= $teacher['id'] ?>"><?= $teacher['lesson'] ?>
-                                (<?= $teacher['firstname'] ?> <?= $teacher['lastname'] ?>)
-                            </option>
-                        <? } ?>
-                    </select>
-                </td>
-            </tr>
-            <tr>
-                <td>Kabinetas</td>
-                <td>
-                    <input type="text" name="cabinet">
-                </td>
-            </tr>
-        </table>
-        <br>
-        <input type="submit" value="Pridėti">
-    </fieldset>
-</form>
 
-Tvarkaraščio užpildymas: <?= $count_lessons ?> / <?= $class['max_week_lessons'] ?>
+    <h2>Klasės pamokų tvarkaraštis</h2>
 
-<br/>
-<br/>
-
-<table border="1">
-    <tr>
-        <? foreach ($days as $day) { ?>
-            <th>
-                <?= ucfirst($day) ?>
-            </th>
-        <? } ?>
-    </tr>
-    <tr>
-        <? foreach ($days as $day) { ?>
-            <td>
-                <table>
-                    <? foreach ($schedule[$day] as $item) { ?>
-                        <tr>
-                            <td>(<?= $item['lesson_number'] ?>)</td>
-                            <td><?= $item['title'] ?></td>
-                            <td>
-                                <a href="<?= base_url('/teacher/deleteLesson/' . $item['id']) ?>">X</a>
-                            </td>
-                        </tr>
-                    <? } ?>
-                </table>
-            </td>
-        <? } ?>
-    </tr>
-</table>
-
-<hr>
-
-Tvarkarastis pagal diena:
-
-<br/>
-<br/>
-
-Iveskite data: <input type="date">
-
-<br/>
-<br/>
-
-<table border="1">
-    <tr>
-        <th>diena</th>
-    </tr>
-    <tr>
-        <td>
+    <form action="<?= base_url('/teacher/addLesson') ?>" method="post">
+        <fieldset>
+            <legend>Pridėti pamoką į tvarkaraštį:</legend>
             <table>
                 <tr>
-                    <td>rodymas</td>
+                    <td>Savaitės diena</td>
+                    <td>
+                        <select name="week_day">
+                            <option>-</option>
+                            <? foreach ($days as $day) { ?>
+                                <option value="<?= $day ?>"><?= ucfirst($day) ?></option>
+                            <? } ?>
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Pamokos eilė</td>
+                    <td>
+                        <select name="lesson_number">
+                            <option>-</option>
+                            <? for ($i = 1; $i <= round($class['max_week_lessons'] / 5); $i++) { ?>
+                                <option value="<?= $i ?>"><?= $i ?></option>
+                            <? } ?>
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Pamoka</td>
+                    <td>
+                        <select name="teacher_id">
+                            <option>-</option>
+                            <? foreach ($teachers as $teacher) { ?>
+                                <option value="<?= $teacher['id'] ?>"><?= $teacher['lesson'] ?>
+                                    (<?= $teacher['firstname'] ?> <?= $teacher['lastname'] ?>)
+                                </option>
+                            <? } ?>
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Kabinetas</td>
+                    <td>
+                        <input type="text" name="cabinet">
+                    </td>
                 </tr>
             </table>
-        </td>
-    </tr>
-</table>
+            <br>
+            <input type="submit" value="Pridėti">
+        </fieldset>
+    </form>
+
+    Tvarkaraščio užpildymas: <?= $count_lessons ?> / <?= $class['max_week_lessons'] ?>
+
+    <br/>
+    <br/>
+
+    <table border="1">
+        <tr>
+            <? foreach ($days as $day) { ?>
+                <th>
+                    <?= ucfirst($day) ?>
+                </th>
+            <? } ?>
+        </tr>
+        <tr>
+            <? foreach ($days as $day) { ?>
+                <td>
+                    <table>
+                        <? foreach ($schedule[$day] as $item) { ?>
+                            <tr>
+                                <td>(<?= $item['lesson_number'] ?>)</td>
+                                <td><?= $item['title'] ?></td>
+                                <td>
+                                    <a href="<?= base_url('teacher/removeLesson/' . $item['id']) ?>">X</a>
+                                </td>
+                            </tr>
+                        <? } ?>
+                    </table>
+                </td>
+            <? } ?>
+        </tr>
+    </table>
+<? } ?>

@@ -72,7 +72,24 @@ class ScheduleModel extends Model
                 ->orderBy('lesson_number', 'ASC')
                 ->findAll();
         }
-
         return $response;
+    }
+
+    public function getTeacherLessons(int $teacher_id, string $date = null)
+    {
+        if ($date == null) {
+            $date = date('Y-m-d');
+        }
+
+        $day = strtolower(date('l', strtotime($date)));
+
+        return $this
+            ->select('schedules.id, schedules.lesson_number, lessons.title, classes.title as class')
+            ->join('lessons', 'lessons.id = schedules.lesson_id', 'left')
+            ->join('classes', 'classes.id = schedules.class_id', 'left')
+            ->where('teacher_id', $teacher_id)
+            ->where('week_day', $day)
+            ->orderBy('lesson_number', 'ASC')
+            ->findAll();
     }
 }
