@@ -8,6 +8,9 @@ use App\Models\StudentModel;
 use App\Models\TeacherModel;
 use App\Models\ClassModel;
 use App\Models\ScheduleModel;
+use App\Models\GradeModel;
+use App\Models\AttendanceModel;
+use App\Models\NoticeModel;
 
 class Teacher extends BaseController
 {
@@ -130,7 +133,7 @@ class Teacher extends BaseController
             ->first();
         if ($schedule) {
             $students = (new StudentModel())
-                ->select('users.firstname, users.lastname')
+                ->select('students.id, users.firstname, users.lastname')
                 ->join('users', 'users.id = students.user_id')
                 ->where('students.class_id', $schedule['class_id'])
                 ->findAll();
@@ -139,6 +142,7 @@ class Teacher extends BaseController
                 'schedule' => $schedule,
                 'students' => $students,
                 'teacher' => $teacher,
+                'date' => $date,
             ];
 
             return view('users/teacher/lesson', $data);
@@ -147,7 +151,68 @@ class Teacher extends BaseController
         return redirect()->to(base_url('/teacher/index'))->with('errors', 'Klaida');
     }
 
-    public function logout()
+    public function saveLesson(int $teacher_id, int $lesson_id, string $date)
+    {
+        $items = $this->request->getVar('content');
+        foreach ($items as $student_id => $content) {
+            if (empty($content)) {
+                continue;
+            }
+            $content = strtolower($content);
+
+            $data = [
+                'teacher_id' => $teacher_id,
+                'lesson_id' => $lesson_id,
+                'student_id' => $student_id,
+                'date' => $date,
+            ];
+
+            if (is_numeric($content) && in_array($content, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10])) {
+                (new GradeModel())->insert(
+                    array_merge($data, [
+                        'grade' => $content
+                    ])
+                );
+            } else if (in_array($content, ['p', 'pavelavo'])) {
+                (new AttendanceModel())->insert(
+                    array_merge($data, [
+                        'status' => 'late'
+                    ])
+                );
+            } else if (in_array($content, ['n', 'nera', 'nebuvo'])) {
+                (new AttendanceModel())->insert(
+                    array_merge($data, [
+                        'status' => 'missing'
+                    ])
+                );
+            } else {
+                $badWords = ['neklause', 'nesimoke', 'isdikavo', 'musesi', 'blogas'];
+                $goodWords = ['geras', 'atidus', 'kruopstus', 'stengiasi'];
+                $words = str_word_count($content, 1);
+                $badWords = count(array_intersect($badWords, $words));
+                $goodWords = count(array_intersect($goodWords, $words));
+
+                if ($badWords > $goodWords) {
+                    $status = 'negative';
+                } elseif ($badWords < $goodWords) {
+                    $status = 'positive';
+                } else {
+                    $status = 'other';
+                }
+
+                (new NoticeModel())->insert(
+                    array_merge($data, [
+                        'message' => $content,
+                        'status' => $status
+                    ])
+                );
+            }
+        }
+        return redirect()->to(base_url('/teacher/index'))->with('success', 'Pamoka sėkmingai užpildyta');
+    }
+
+    public
+    function logout()
     {
         $this->session->remove('user');
 
