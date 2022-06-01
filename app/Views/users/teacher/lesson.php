@@ -10,11 +10,25 @@ Mokiniai:<br/>
       method="post">
     <table>
         <? foreach ($students as $student) { ?>
+            <?php
+            $content = '';
+            if ($student['grade'] != null) {
+                $content = $student['grade'];
+            } elseif ($student['attendance'] != null) {
+                if ($student['attendance'] == 'late') {
+                    $content = 'p';
+                } else if ($student['attendance'] == 'missing') {
+                    $content = 'n';
+                }
+            } else if ($student['message'] != null) {
+                $content = $student['message'];
+            }
+            ?>
             <tr>
                 <td><?= $student['firstname'] ?></td>
                 <td><?= $student['lastname'] ?></td>
                 <td>
-                    <input name="content[<?= $student['id'] ?>]" type="text"/>
+                    <input name="content[<?= $student['id'] ?>]" value="<?= $content ?>" type="text"/>
                 </td>
             </tr>
         <? } ?>

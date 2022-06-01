@@ -133,8 +133,11 @@ class Teacher extends BaseController
             ->first();
         if ($schedule) {
             $students = (new StudentModel())
-                ->select('students.id, users.firstname, users.lastname')
+                ->select('students.id, users.firstname, users.lastname, grades.grade, attendance.status as attendance, notices.message, notices.status as message_status')
                 ->join('users', 'users.id = students.user_id')
+                ->join('attendance', 'attendance.student_id = students.id and attendance.date = "' . $date . '"', 'left')
+                ->join('grades', 'grades.student_id = students.id and grades.date = "' . $date . '"', 'left')
+                ->join('notices', 'notices.student_id = students.id and notices.date = "' . $date . '"', 'left')
                 ->where('students.class_id', $schedule['class_id'])
                 ->findAll();
 
@@ -168,23 +171,62 @@ class Teacher extends BaseController
             ];
 
             if (is_numeric($content) && in_array($content, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10])) {
-                (new GradeModel())->insert(
-                    array_merge($data, [
-                        'grade' => $content
-                    ])
-                );
+                $grade = (new GradeModel());
+                foreach ($data as $key => $value) {
+                    $grade = $grade->where($key, $value);
+                }
+                $grade = $grade->first();
+
+                if ($grade) {
+                    (new GradeModel())
+                        ->set('grade', $content)
+                        ->where('id', $grade['id'])
+                        ->update();
+                } else {
+                    (new GradeModel())->insert(
+                        array_merge($data, [
+                            'grade' => $content
+                        ])
+                    );
+                }
             } else if (in_array($content, ['p', 'pavelavo'])) {
-                (new AttendanceModel())->insert(
-                    array_merge($data, [
-                        'status' => 'late'
-                    ])
-                );
+                $attendance = (new AttendanceModel());
+                foreach ($data as $key => $value) {
+                    $attendance = $attendance->where($key, $value);
+                }
+                $attendance = $attendance->first();
+
+                if ($attendance) {
+                    (new AttendanceModel())
+                        ->set('status', 'late')
+                        ->where('id', $attendance['id'])
+                        ->update();
+                } else {
+                    (new AttendanceModel())->insert(
+                        array_merge($data, [
+                            'status' => 'late'
+                        ])
+                    );
+                }
             } else if (in_array($content, ['n', 'nera', 'nebuvo'])) {
-                (new AttendanceModel())->insert(
-                    array_merge($data, [
-                        'status' => 'missing'
-                    ])
-                );
+                $attendance = (new AttendanceModel());
+                foreach ($data as $key => $value) {
+                    $attendance = $attendance->where($key, $value);
+                }
+                $attendance = $attendance->first();
+
+                if ($attendance) {
+                    (new AttendanceModel())
+                        ->set('status', 'missing')
+                        ->where('id', $attendance['id'])
+                        ->update();
+                } else {
+                    (new AttendanceModel())->insert(
+                        array_merge($data, [
+                            'status' => 'missing'
+                        ])
+                    );
+                }
             } else {
                 $badWords = ['neklause', 'nesimoke', 'isdikavo', 'musesi', 'blogas'];
                 $goodWords = ['geras', 'atidus', 'kruopstus', 'stengiasi'];
@@ -200,12 +242,26 @@ class Teacher extends BaseController
                     $status = 'other';
                 }
 
-                (new NoticeModel())->insert(
-                    array_merge($data, [
-                        'message' => $content,
-                        'status' => $status
-                    ])
-                );
+                $notice = (new NoticeModel());
+                foreach ($data as $key => $value) {
+                    $notice = $notice->where($key, $value);
+                }
+                $notice = $notice->first();
+
+                if ($notice) {
+                    (new NoticeModel())
+                        ->set('message', $content)
+                        ->set('status', $status)
+                        ->where('id', $notice['id'])
+                        ->update();
+                } else {
+                    (new NoticeModel())->insert(
+                        array_merge($data, [
+                            'message' => $content,
+                            'status' => $status
+                        ])
+                    );
+                }
             }
         }
         return redirect()->to(base_url('/teacher/index'))->with('success', 'Pamoka sėkmingai užpildyta');
