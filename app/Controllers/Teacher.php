@@ -40,7 +40,7 @@ class Teacher extends BaseController
             $data['schedule'] = ScheduleModel::getLessons($teacher['class_id']);
             $data['students'] = (new ClassModel())->getStudents($teacher['class_id']);
             $data['class'] = (new ClassModel())->find($teacher['class_id']);
-            $data['count_lessons'] = (new ScheduleModel())->where('class_id', $teacher['class_id'])->countAll();
+            $data['count_lessons'] = (new ScheduleModel())->where('class_id', $teacher['class_id'])->countAllResults();
             $data['teachers'] = (new TeacherModel())
                 ->select('teachers.id, users.email, users.firstname, users.lastname, lessons.title as lesson')
                 ->join('users', 'users.id = teachers.user_id')
@@ -120,12 +120,12 @@ class Teacher extends BaseController
     public function lesson(int $schedule_id, string $date)
     {
         $teacher = (new TeacherModel())
-            ->select('teachers.*, lessons.title')
+            ->select('teachers.*, lessons.title, lessons.id as lesson_id')
             ->join('lessons', 'lessons.id = teachers.lesson_id')
             ->where('teachers.user_id', session()->user['id'])
             ->first();
         $schedule = (new ScheduleModel())
-            ->select('classes.title, schedules.cabinet, schedules.class_id')
+            ->select('classes.title, schedules.cabinet, schedules.class_id, schedules.id')
             ->join('classes', 'classes.id = schedules.class_id')
             ->where('schedules.week_day', strtolower(date('l', strtotime($date))))
             ->where('schedules.teacher_id', $teacher['id'])
@@ -135,9 +135,9 @@ class Teacher extends BaseController
             $students = (new StudentModel())
                 ->select('students.id, users.firstname, users.lastname, grades.grade, attendance.status as attendance, notices.message, notices.status as message_status')
                 ->join('users', 'users.id = students.user_id')
-                ->join('attendance', 'attendance.student_id = students.id and attendance.date = "' . $date . '"', 'left')
-                ->join('grades', 'grades.student_id = students.id and grades.date = "' . $date . '"', 'left')
-                ->join('notices', 'notices.student_id = students.id and notices.date = "' . $date . '"', 'left')
+                ->join('attendance', 'attendance.student_id = students.id and attendance.date = "' . $date . '" and attendance.teacher_id = ' . $teacher['id'], 'left')
+                ->join('grades', 'grades.student_id = students.id and grades.date = "' . $date . '" and grades.teacher_id = ' . $teacher['id'], 'left')
+                ->join('notices', 'notices.student_id = students.id and notices.date = "' . $date . '" and notices.teacher_id = ' . $teacher['id'], 'left')
                 ->where('students.class_id', $schedule['class_id'])
                 ->findAll();
 
@@ -154,8 +154,26 @@ class Teacher extends BaseController
         return redirect()->to(base_url('/teacher/index'))->with('errors', 'Klaida');
     }
 
-    public function saveLesson(int $teacher_id, int $lesson_id, string $date)
+    public function saveLesson(int $schedule_id, string $date)
     {
+        $teacher = (new TeacherModel())
+            ->select('teachers.*, lessons.title')
+            ->join('lessons', 'lessons.id = teachers.lesson_id')
+            ->where('teachers.user_id', session()->user['id'])
+            ->first();
+
+        $schedule = (new ScheduleModel())
+            ->select('classes.title, schedules.cabinet, schedules.class_id, schedules.lesson_id')
+            ->join('classes', 'classes.id = schedules.class_id')
+            ->where('schedules.week_day', strtolower(date('l', strtotime($date))))
+            ->where('schedules.teacher_id', $teacher['id'])
+            ->where('schedules.id', $schedule_id)
+            ->first();
+
+        if (!$schedule) {
+            dd('klaida');
+        }
+
         $items = $this->request->getVar('content');
         foreach ($items as $student_id => $content) {
             if (empty($content)) {
@@ -164,8 +182,8 @@ class Teacher extends BaseController
             $content = strtolower($content);
 
             $data = [
-                'teacher_id' => $teacher_id,
-                'lesson_id' => $lesson_id,
+                'teacher_id' => $teacher['id'],
+                'lesson_id' => $schedule['lesson_id'],
                 'student_id' => $student_id,
                 'date' => $date,
             ];
@@ -189,41 +207,28 @@ class Teacher extends BaseController
                         ])
                     );
                 }
-            } else if (in_array($content, ['p', 'pavelavo'])) {
+            } else if (in_array($content, ['p', 'pavelavo', 'n', 'nera', 'nebuvo'])) {
                 $attendance = (new AttendanceModel());
                 foreach ($data as $key => $value) {
                     $attendance = $attendance->where($key, $value);
                 }
                 $attendance = $attendance->first();
 
-                if ($attendance) {
-                    (new AttendanceModel())
-                        ->set('status', 'late')
-                        ->where('id', $attendance['id'])
-                        ->update();
-                } else {
-                    (new AttendanceModel())->insert(
-                        array_merge($data, [
-                            'status' => 'late'
-                        ])
-                    );
+                if (in_array($content, ['p', 'pavelavo'])) {
+                    $status = 'late';
+                } elseif (in_array($content, ['n', 'nera', 'nebuvo'])) {
+                    $status = 'missing';
                 }
-            } else if (in_array($content, ['n', 'nera', 'nebuvo'])) {
-                $attendance = (new AttendanceModel());
-                foreach ($data as $key => $value) {
-                    $attendance = $attendance->where($key, $value);
-                }
-                $attendance = $attendance->first();
 
                 if ($attendance) {
                     (new AttendanceModel())
-                        ->set('status', 'missing')
+                        ->set('status', $status)
                         ->where('id', $attendance['id'])
                         ->update();
                 } else {
                     (new AttendanceModel())->insert(
                         array_merge($data, [
-                            'status' => 'missing'
+                            'status' => $status
                         ])
                     );
                 }
@@ -264,6 +269,11 @@ class Teacher extends BaseController
             }
         }
         return redirect()->to(base_url('/teacher/index'))->with('success', 'Pamoka sėkmingai užpildyta');
+    }
+
+    public function saveStudent()
+    {
+
     }
 
     public

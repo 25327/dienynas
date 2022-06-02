@@ -6,7 +6,7 @@ Data: <?= $date ?><br/>
 <hr>
 
 Mokiniai:<br/>
-<form action="<?= base_url('/teacher/saveLesson/' . $teacher['id'] . '/' . $teacher['lesson_id'] . '/' . $date) ?>"
+<form action="<?= base_url('/teacher/saveLesson/' . $schedule['id'] . '/' . $date) ?>"
       method="post">
     <table>
         <? foreach ($students as $student) { ?>
