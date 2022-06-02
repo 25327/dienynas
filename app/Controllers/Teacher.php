@@ -234,6 +234,12 @@ class Teacher extends BaseController
                 $badWords = count(array_intersect($badWords, $words));
                 $goodWords = count(array_intersect($goodWords, $words));
 
+                $notice = (new NoticeModel());
+                foreach ($data as $key => $value) {
+                    $notice = $notice->where($key, $value);
+                }
+                $notice = $notice->first();
+
                 if ($badWords > $goodWords) {
                     $status = 'negative';
                 } elseif ($badWords < $goodWords) {
@@ -241,13 +247,6 @@ class Teacher extends BaseController
                 } else {
                     $status = 'other';
                 }
-
-                $notice = (new NoticeModel());
-                foreach ($data as $key => $value) {
-                    $notice = $notice->where($key, $value);
-                }
-                $notice = $notice->first();
-
                 if ($notice) {
                     (new NoticeModel())
                         ->set('message', $content)
